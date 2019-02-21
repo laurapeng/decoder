@@ -1,0 +1,8 @@
+dataType	RNAseq
+dataMatrix	demo_data.mat
+dataFormat	mat
+geneIDType	TCGA
+logTransformed	no
+rangeK	auto
+repTimes	2000
+

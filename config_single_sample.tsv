@@ -1,0 +1,5 @@
+refSet	TCGA_RNAseq_PAAD
+dataMatrix	COMPASS_PDAC.tsv
+dataFormat	tsv
+geneIDType	TCGA
+logTransformed	no
