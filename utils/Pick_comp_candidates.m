@@ -1,4 +1,4 @@
-function [resIdx,nextFlag] = Pick_comp_candidates(factorLinkScore,i,lowThre,highThre)
+function [resIdx,factorType,nextFlag] = Pick_comp_candidates(factorLinkScore,i,lowThre,highThre)
 
 nextFlag = 0;
 factorType = 'Dropped';

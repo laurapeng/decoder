@@ -1,6 +1,7 @@
 function [GSEAout] = GSEA(rankedGenes,geneIDType)
 
 binDECODER = fileparts(mfilename('fullpath'));
+binDECODER = fileparts(binDECODER);
 addpath(fullfile(binDECODER,'data'))
 
 switch geneIDType

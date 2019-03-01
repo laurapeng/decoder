@@ -3,11 +3,11 @@ function Decon_de_novo(configFileName)
 %% ========== Preprocess ==================================================
 tic
 % Add path
-binDECODER = cd;
-[binDECODER,~,~] = fileparts(binDECODER);
+binDECODER = fileparts(mfilename('fullpath'));
+binDECODER = fileparts(binDECODER);
 addpath(binDECODER)
-addpath(fullfile(binDECODER,'utils'))
 addpath(fullfile(binDECODER,'data'))
+addpath(fullfile(binDECODER,'utils'))
 
 % Read and parse configure file 
 configFile = fopen(configFileName);
@@ -337,7 +337,7 @@ sltFactorLinkFull= {};
 sltFactorLinkFullScore = {};
 n = 0;
 for i = 2:size(factorLinkScore,1)
-    [resIdx,nextFlag] = Pick_comp_candidates(factorLinkScore,i,lowThre,highThre);
+    [resIdx,factorType,nextFlag] = Pick_comp_candidates(factorLinkScore,i,lowThre,highThre);
     
     if nextFlag == 1
         continue

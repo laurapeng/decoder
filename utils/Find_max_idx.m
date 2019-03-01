@@ -13,6 +13,11 @@ if endIdx~=j
     resScore = sum(scoreCur(j+1:endIdx))/resLen;
     tmpIdx = find(scoreCur(j+1:endIdx) == max(scoreCur(j+1:endIdx)));
     maxIdx = tmpIdx(1) + j;
+    if length(tmpIdx) == 2
+        if tmpIdx(2)==tmpIdx(1)+1
+            maxIdx = tmpIdx(2) + j;
+        end
+    end
     if maxIdx == startIdx && resLen <= 5  
         resIdx = endIdx;
     else

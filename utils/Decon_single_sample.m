@@ -1,11 +1,11 @@
 function [sampleWeights] = Decon_single_sample(refSet,dataMatrix,dataFormat,geneIDType,logTransformed)
 
 % Add path
-binDECODER = cd;
-[binDECODER,~,~] = fileparts(binDECODER);
+binDECODER = fileparts(mfilename('fullpath'));
+binDECODER = fileparts(binDECODER);
 addpath(binDECODER)
-addpath(fullfile(binDECODER,'utils'))
 addpath(fullfile(binDECODER,'data'))
+addpath(fullfile(binDECODER,'utils'))
 
 % Load reference
 load(sprintf('%s.mat',refSet));
