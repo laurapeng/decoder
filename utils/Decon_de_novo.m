@@ -1,4 +1,4 @@
-function Decon_de_novo(configFileName) 
+function Decon_de_novo(configFile) 
 
 %% ========== Preprocess ==================================================
 tic

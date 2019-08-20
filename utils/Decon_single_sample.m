@@ -1,4 +1,6 @@
-function [sampleWeights] = Decon_single_sample(refSet,dataMatrix,dataFormat,geneIDType,logTransformed)
+function [sampleWeights] = Decon_single_sample(configFile)
+%function [sampleWeights] = Decon_single_sample(refSet,dataMatrix,dataFormat,geneIDType,logTransformed)
+
 
 % Add path
 binDECODER = fileparts(mfilename('fullpath'));

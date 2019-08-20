@@ -1,0 +1,19 @@
+# DECODER is an integrated framework which performs de novo deconvolution, and compartment weight estimation for a single sample.
+# Peng et. al.
+
+# For de novo deconvolution, ----------------------------------------------------------------------------------------------------
+# simplely call the function as below:
+
+Decon_de_novo(configFile)
+
+# "configFile" is a configuration file that provides input files and parameters, a demo of which is config_de_novo.tsv.
+# The user needs to prepare a data matrix file with format .mat, .tsv or .csv.
+
+# For single-sample deconvolution,----------------------------------------------------------------------------------------------
+# simplely call the function as below:
+
+Decon_single_sample(configFile)
+
+# "configFile" is a configuration file that provides input files and parameters, a demo of which is config_de_novo.tsv.
+# The user needs to prepare a data matrix file with format .mat, .tsv or .csv.
+# A reference dataset needs to be determined. Options are TCGA cancer types, e.g. TCGA_RNAseq_PAAD.
