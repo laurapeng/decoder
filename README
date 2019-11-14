@@ -16,8 +16,8 @@
 ## dataFormat:		(e.g.) mat
 ## geneIDType:		TCGA | geneSymbol | EntrezID
 ## logTransformed:	no | yes (note: if the data is log-transformed)
-## rangeK:		auto | (e.g.) 2:10 (note: to save time, highly recommend to try 2:10 before the user is sure the data is more complex; 'auto' was used for TCGA RNAseq, Moffit microarray and TCGA ATACseq; for 'auto', K starts when the median score is > 0.5, it will run to K=30 at maximun, but stops when the factors are determined to be too splitted before it reaches K=30)
-## repTimes:		(e.g.) 500 (note: to save time, highly recommend to try 1000 before the user wants to finalize robust compartment and gene weights; smaller repTimes tends to give fewer compartments; 10,000 was used in the original paper to derive robust weigths)
+## rangeK:		auto | (e.g.) 2:10 (note: to save time, highly recommend to try 2:10 before the user is sure the data is more complex; larger maximun K tends to capture more subtle signals (less dominant compartments); 'auto' was used for TCGA RNAseq, Moffit microarray and TCGA ATACseq; for 'auto', K starts when the median score is > 0.5, it will run to K=30 at maximun, but stops when the factors are determined to be too splitted before it reaches K=30)
+## repTimes:		(e.g.) 500 (note: to save time, highly recommend to try 500 before the user wants to finalize robust compartment and gene weights; smaller repTimes tends to give fewer compartments; 10,000 was used in the original paper to derive robust weigths)
 
 # add path of cloned git repo
 
