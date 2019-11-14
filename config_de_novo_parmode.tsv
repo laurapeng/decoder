@@ -1,0 +1,8 @@
+dataType	RNAseq
+dataMatrix	/nas/longleaf/home/xlpeng/scratch/DECODER_demo/demo_data.mat
+dataFormat	mat
+geneIDType	TCGA
+logTransformed	no
+repTimes	10000
+binDECODER	/nas/longleaf/home/xlpeng/scripts/DECODER
+

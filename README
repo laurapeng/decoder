@@ -1,54 +1,86 @@
-# DECODER is an integrated framework which performs de novo deconvolution, and compartment weight estimation for a single sample.
-# This is a walkthrough of executing the Matlab functions on a local PC.
+% DECODER is an integrated framework which performs de novo deconvolution, and compartment weight estimation for a single sample.
+% This is a walkthrough of executing the Matlab functions on a local PC.
 
-# -----------------------------------------------------------------------------------------------------------------------------
-# For de novo deconvolution ---------------------------------------------------------------------------------------------------
-# -----------------------------------------------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------------------------------------
+% De novo deconvolution -------------------------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------------------------------------
 
-# Set path to where the output files are supposed to reside as working directory
+%% Integrated mode for PC (single step; time-consuming) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# Prepare a data matrix file with format .mat, .tsv or .csv in the working directory. Refer to demo_data.mat/tsv/csv.
-## Normalzed counts (TPM/FPKM) for RNAseq and normalized intensities for ATACseq are highly recommended.
+% Set path to where the output files are supposed to reside as working directory
 
-# Prepare a "configFile", which is a configuration file that provides input files and auguments in the working directory. Refer to config_de_novo.tsv.
-## dataType: RNAseq | ATACseq | Microarray
-## dataMatrix:		(e.g.) demo_data.mat
-## dataFormat:		(e.g.) mat
-## geneIDType:		TCGA | geneSymbol | EntrezID
-## logTransformed:	no | yes (note: if the data is log-transformed)
-## rangeK:		auto | (e.g.) 2:10 (note: to save time, highly recommend to try 2:10 before the user is sure the data is more complex; larger maximun K tends to capture more subtle signals (less dominant compartments); 'auto' was used for TCGA RNAseq, Moffit microarray and TCGA ATACseq; for 'auto', K starts when the median score is > 0.5, it will run to K=30 at maximun, but stops when the factors are determined to be too splitted before it reaches K=30)
-## repTimes:		(e.g.) 500 (note: to save time, highly recommend to try 500 before the user wants to finalize robust compartment and gene weights; smaller repTimes tends to give fewer compartments; 10,000 was used in the original paper to derive robust weigths)
+% Prepare a data matrix file with format .mat, .tsv or .csv in the working directory. Refer to demo_data.mat/tsv/csv.
+%%% Normalzed counts (TPM/FPKM) for RNAseq and normalized intensities for ATACseq are highly recommended.
 
-# add path of cloned git repo
+% Prepare a "configFile", which is a configuration file that provides input files and auguments in the working directory. Refer to config_de_novo.tsv.
+%%% dataType: RNAseq | ATACseq | Microarray
+%%% dataMatrix:		(e.g.) demo_data.mat
+%%% dataFormat:		(e.g.) mat
+%%% geneIDType:		TCGA | geneSymbol | EntrezID
+%%% logTransformed:	no | yes (note: if the data is log-transformed)
+%%% rangeK:		auto | (e.g.) 2:10 (note: to save time, highly recommend to try 2:10 before the user is sure the data is more complex; larger maximun K tends to capture more subtle signals (less dominant compartments); 'auto' was used for TCGA RNAseq, Moffit microarray and TCGA ATACseq; for 'auto', K starts when the median score is > 0.5, it will run to K=30 at maximun, but stops when the factors are determined to be too splitted before it reaches K=30)
+%%% repTimes:		(e.g.) 500 (note: to save time, highly recommend to try 500 before the user wants to finalize robust compartment and gene weights; smaller repTimes tends to give fewer compartments)
+
+% add path of cloned git repo
 
 >> addpath('/path-to-local-git_repo/')
 
-# run de novo deconvolution
+% run de novo deconvolution
 
 >> Decon_de_novo(configFile)
 
+%% Parallele mode for HPC (two steps; time-efficient) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# -----------------------------------------------------------------------------------------------------------------------------
-# For single-sample deconvolution----------------------------------------------------------------------------------------------
-# -----------------------------------------------------------------------------------------------------------------------------
+% Prepare a data matrix file with format .mat, .tsv or .csv in the working directory. Refer to demo_data.mat/tsv/csv.
+%%% Normalzed counts (TPM/FPKM) for RNAseq and normalized intensities for ATACseq are highly recommended.
 
-# Set path to where the output files are supposed to reside as working directory
+% Prepare a "configFile", which is a configuration file that provides input files and auguments in the working directory. Refer to config_de_novo_parmode.tsv.
+%%% dataType: RNAseq | ATACseq | Microarray
+%%% dataMatrix:		(e.g.) demo_data.mat (note: provide absolute path)
+%%% dataFormat:		(e.g.) mat
+%%% geneIDType:		TCGA | geneSymbol | EntrezID
+%%% logTransformed:	no | yes (note: if the data is log-transformed)
+%%% repTimes:		(e.g.) 10000 (note: 10,000 was used in the original paper to derive robust weigths)
+%%% binDECODER		(e.g.) /nas/longleaf/home/xlpeng/scripts/DECODER (note: provide absolute path to where the DECODER repo is)
 
-# Prepare a data matrix file with format .mat, .tsv or .csv in the working directory. Refer to demo_data.mat/tsv/csv.
-## Normalzed counts (TPM/FPKM) for RNAseq and normalized intensities for ATACseq are highly recommended.
+% run separate runs for increasing K using a loop
+% the wrapped launch file might be different based on the settings of available HPC to users. Refer to launch_sbatch.sh and launch_DECODER_K7.m as an example for UNC longleaf cluster.
+% this step generate separate files of xx-factor_data.mat and ccmat_repxxx_fxx.mat
+% on terminal
 
-# Prepare a "configFile", which is a configuration file that provides input files and auguments in the working directory. Refer to config_de_novo.tsv.
-### refSet:		(e.g.) TCGA_RNAseq_PAAD (Options are TCGA cancer types. Refer to TCGA_RNAseq_****.mat in the data folder)
-### dataMatrix		(e.g.) COMPASS_PDAC.tsv
-### dataFormat		(e.g.) tsv
-### geneIDType		(e.g.) geneSymbol
-### logTransformed	no | yes (note: if the data is log-transformed)
+for m in /nas/longleaf/home/xlpeng/scratch/DECODER_demo/launch_DECODER_K*.m
+do dir=`dirname $m`
+	cd $dir
+	sbatch launch_sbatch.sh $m
+done
 
-# add path of cloned git repo
+% after all the jobs are finished
+% collect intermediate results from increasing K and process (using matlab)
+
+>> Decon_de_novo_parmode_step2(configFileName)
+
+
+% -----------------------------------------------------------------------------------------------------------------------------
+% Single-sample deconvolution--------------------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------------------------------------------
+
+% Set path to where the output files are supposed to reside as working directory
+
+% Prepare a data matrix file with format .mat, .tsv or .csv in the working directory. Refer to demo_data.mat/tsv/csv.
+%%% Normalzed counts (TPM/FPKM) for RNAseq and normalized intensities for ATACseq are highly recommended.
+
+% Prepare a "configFile", which is a configuration file that provides input files and auguments in the working directory. Refer to config_de_novo.tsv.
+%%% refSet:		(e.g.) TCGA_RNAseq_PAAD (Options are TCGA cancer types. Refer to TCGA_RNAseq_****.mat in the data folder)
+%%% dataMatrix		(e.g.) COMPASS_PDAC.tsv
+%%% dataFormat		(e.g.) tsv
+%%% geneIDType		(e.g.) geneSymbol
+%%% logTransformed	no | yes (note: if the data is log-transformed)
+
+% add path of cloned git repo
 
 >> addpath('/path-to-local-git_repo/')
 
-# run single-sample deconvolution
+% run single-sample deconvolution
 
 >> Decon_single_sample(configFile)
 
