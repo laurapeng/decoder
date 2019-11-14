@@ -1,7 +1,7 @@
 function [samplesigsAll,genesigsAll,sparsityAll,markerGenesAll,topGenesAll]...
         = Save_cur_factor(samplesigsAll,genesigsAll,sparsityAll,markerGenesAll,topGenesAll,factorInd,samplesigs,genesigs,geneID)
 
-for x = 1:numfactors
+for x = 1:size(genesigs,2)
     samplesigsAll{factorInd,x} = samplesigs(x,:); 
     genesigsAll{factorInd,x} = genesigs(:,x);
     sparsity = genesigs(:,x)-max(genesigs(:,setdiff(1:size(genesigs,2),x)),[],2);

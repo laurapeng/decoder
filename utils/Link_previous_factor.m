@@ -1,4 +1,4 @@
-function [factorScore,factorMatch] = Link_previous_factor(factorInd,numfactors,factorInfo,topGenesAll)
+function [factorScore,factorMatch] = Link_previous_factor(factorInd,numfactors,factorInfo,topGenesAll,factorScore,factorMatch)
 
 for x = 1:numfactors
     switch factorInd

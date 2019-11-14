@@ -1,5 +1,7 @@
 function [ccmat] = Train_NMF_seed(data,master_subset,numfactors)
 
+ccmat = zeros(size(data,1));
+
 % Pick out a subset of 80% samples
 subset = master_subset;
 subset(subset)=rand(sum(subset),1)>0.2;

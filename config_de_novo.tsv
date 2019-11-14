@@ -3,6 +3,5 @@ dataMatrix	demo_data.mat
 dataFormat	mat
 geneIDType	TCGA
 logTransformed	no
-rangeK	auto
-repTimes	2000
-
+rangeK	2:10
+repTimes	1000

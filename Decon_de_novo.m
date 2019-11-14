@@ -1,7 +1,10 @@
-function Decon_de_novo(configFile) 
+function Decon_de_novo(configFileName) 
 
 %% ========== Preprocess ==================================================
 tic
+
+outDir = pwd;
+
 % Add path
 binDECODER = fileparts(mfilename('fullpath'));
 binDECODER = fileparts(binDECODER);
@@ -11,7 +14,12 @@ addpath(fullfile(binDECODER,'utils'))
 
 % Read and parse configure file 
 configFile = fopen(configFileName);
-configInfo = textscan(configFile,'%s\t%s');
+if configFile == -1
+    disp('Configure file not found...');
+else
+    configInfo = textscan(configFile,'%s\t%s');
+    %configInfo = [configInfo{:}];
+end
 fclose(configFile);
 
 % Set parameters
@@ -25,9 +33,9 @@ rangeK = configInfo{2}{tmpInd};
 switch rangeK
     case 'auto'
 	minFactorNum = 2;
-	maxFactorNum = 25;
+	maxFactorNum = 30;
     otherwise
-	tmp = split(rangeK,':')
+	tmp = split(rangeK,':');
 	minFactorNum = str2num(tmp{1});
 	maxFactorNum = str2num(tmp{2});
 end
@@ -42,18 +50,17 @@ switch dataType
     case 'ATACseq'
         numTrainGene=8000;
     otherwise
-        disp('Error: Data type not supported yet...');
+        disp('Error: Data type not supported...');
         return
 end
 
 % Load data matrix
 tmpInd = find(strcmp(configInfo{1},'dataMatrix'));
 dataMatrix = configInfo{2}{tmpInd};
-outDir = fileparts(dataMatrix);
 
 tmpInd = find(strcmp(configInfo{1},'dataFormat'));
 dataFormat = configInfo{2}{tmpInd};
-[data,geneID,sampleID,master_subset] = Load_data(dataMatrix,dataFormat)
+[data,geneID,sampleID,master_subset] = Load_data(dataMatrix,dataFormat);
 
 tmpInd = find(strcmp(configInfo{1},'logTransformed'));
 logTransformed = configInfo{2}{tmpInd};
@@ -84,7 +91,7 @@ timePreproc = toc;
 fprintf('Preprocessing completed, %3.0f minutes elapsed...\n',...
          timePreproc/60)
 clear configFile configFileName 
-clear dataFormat dataType dataMatrix logTransformed numTrainGene
+clear dataFormat dataMatrix logTransformed numTrainGene
 clear rawTable x tmpInd tmp ans
 
 %% ========== Run NMF through increasing number of K ======================
@@ -99,17 +106,24 @@ factorScore = zeros((maxFactorNum-minFactorNum+1),maxFactorNum);
 factorMatch = zeros((maxFactorNum-minFactorNum+1),maxFactorNum);
 factorInd = 0;
 factorStartInd = 1;
+numSkip = 0;
 
 for numfactors = minFactorNum:maxFactorNum
     factorInd = factorInd + 1;
     factorEndInd = factorInd;
     factorInfo(factorInd,1) = numfactors; 
+    
+    if (strcmp(rangeK,'auto')) && (numSkip >= 3)
+        factorInd = factorInd - 1;
+        factorEndInd = factorInd;
+        timeKLoop = timeIteration + toc;
+        break
+    end
     %%% ===== Train gene weight seed on 5K genes through repetitions ======
     timeIteration = timeKLoop;
     data = selected.data;
     geneID = selected.geneID ;
     rng(999);
-    ccmat = zeros(size(data,1));
     for repetition = 1:repTimes
         tic;
         [ccmat] = Train_NMF_seed(data,master_subset,numfactors);
@@ -171,24 +185,12 @@ for numfactors = minFactorNum:maxFactorNum
         tmpK = length(find(~all(genesigs==0)));
         data = original.data;
         geneID = original.geneID;
-        if strcmp(autoStop,'yes') % stop if converged; cut tails (1|2) if < 0.5
-            factorInd = factorInd - 1;
-                factorEndInd = factorInd;
-            if factorInfo(factorEndInd,3) < 0.5 && factorEndInd>=2
-                    if factorInfo(factorEndInd-1,3) < 0.5
-                factorEndInd = factorEndInd-2;
-                    else
-                        factorEndInd = factorEndInd-1;
-                    end
-            end
-            fprintf('K=%d: Converged on %d factors, thus stopped...\n',numfactors, tmpK)
-            timeKLoop = timeIteration + toc;
-            break
-        else
-            fprintf('K=%d: Converged on %d factors, thus skipped...\n',numfactors, tmpK)
-            timeKLoop = timeIteration + toc;
-            continue
-        end
+        
+        numSkip = numSkip+1;
+        fprintf('K=%d: Converged on %d factors, thus skipped...\n',numfactors, tmpK)
+        factorInd = factorInd - 1;
+        timeKLoop = timeIteration + toc;
+        continue
     end
     for i = 1:size(samplesigs,1)
         f = mean(genesigs(:,i));
@@ -202,27 +204,15 @@ for numfactors = minFactorNum:maxFactorNum
     genesigs = temp;
     [genesigs,samplesigs] = nnmf(data(:,subset),numfactors,'w0',genesigs,'algorith','als');
     if ~isempty(find(all(genesigs==0)))
-	tmpK = length(find(~all(genesigs==0)));
+        tmpK = length(find(~all(genesigs==0)));
         data = original.data;
         geneID = original.geneID;
-        if strcmp(autoStop,'yes')
-            factorInd = factorInd - 1;
-                factorEndInd = factorInd;
-            if factorInfo(factorEndInd,3) < 0.5 && factorEndInd>=2
-                    if factorInfo(factorEndInd-1,3) < 0.5
-                        factorEndInd = factorEndInd-2;
-                    else
-                        factorEndInd = factorEndInd-1;
-                    end
-            end
-            fprintf('K=%d: Converged on %d factors, thus stopped...\n',numfactors, tmpK)
-            timeKLoop = timeIteration + toc;
-            break
-        else
-            fprintf('K=%d: Converged on %d factors, thus skipped...\n',numfactors, tmpK)
-            timeKLoop = timeIteration + toc;
-            continue
-        end
+        
+        numSkip = numSkip+1;
+        fprintf('K=%d: Converged on %d factors, thus skipped...\n',numfactors, tmpK)
+        factorInd = factorInd - 1;
+        timeKLoop = timeIteration + toc;
+        continue
     end
     for i = 1:size(samplesigs,1)
         f = mean(genesigs(:,i));
@@ -259,11 +249,11 @@ for numfactors = minFactorNum:maxFactorNum
     %%% ===== Process current factors =====================================
     fprintf('K=%d: saving current results...\n',numfactors)
     [samplesigsAll,genesigsAll,sparsityAll,markerGenesAll,topGenesAll]...
-        = Id_cur_genes(samplesigsAll,genesigsAll,sparsityAll,markerGenesAll,topGenesAll,factorInd,samplesigs,genesigs,geneID);
+        = Save_cur_factor(samplesigsAll,genesigsAll,sparsityAll,markerGenesAll,topGenesAll,factorInd,samplesigs,genesigs,geneID);
 
     % calculate factor score and link factors
     fprintf('K=%d: factor linkages establishing with the previous run...\n',numfactors)
-    [factorScore,factorMatch] = Link_previous_factor(factorInd,numfactors,factorInfo,topGenesAll);
+    [factorScore,factorMatch] = Link_previous_factor(factorInd,numfactors,factorInfo,topGenesAll,factorScore,factorMatch);
     
     %%% ====== Evaluate current K =========================================
     fprintf('K=%d: current K evaluating...\n',numfactors)
@@ -271,14 +261,14 @@ for numfactors = minFactorNum:maxFactorNum
     factorInfo(factorInd,3) = median(factorScore(factorInd,factorScore(factorInd,:)~=0));
     
     % Determine K to start and K to stop 
-    if strcmp(autoStop,'yes')
+    if strcmp(rangeK,'auto')
         % find the first score that > 0.5
         if factorInd ~= 1
             if (factorStartInd==1) && (factorInfo(factorInd,3) >= 0.5)
                 factorStartInd = factorInd;
             end
         end
-        % stop if 4 continous < 0.5
+        % stop if 4 continous < 0.5 and at least ten continous runs
         if factorStartInd~=1
             if factorInd-factorStartInd+1>=9
                 if ((factorInfo(factorInd,3) < 0.5)...
@@ -286,8 +276,8 @@ for numfactors = minFactorNum:maxFactorNum
                         &&  (factorInfo((factorInd-2),3) < 0.5)...
                         &&  (factorInfo((factorInd-3),3) < 0.5))
                     factorEndInd = factorInd-4;
-                    break
                     timeKLoop = timeIteration + toc;
+                    break
                 end
             end	    
         end
@@ -307,18 +297,18 @@ factorScore = factorScore(factorStartInd:factorEndInd,:);
 factorMatch = factorMatch(factorStartInd:factorEndInd,:);
 
 timeKLoop = timeKLoop + toc;
-if strcmp(autoStop,'yes')
-    if factorStartInd~=1
-	fprintf('K=%d:%d(auto): NMF completed, %3.0f minutes elapsed...\n',factorInfo(1,1),factorInfo(end,1),timeKLoop/60)
-    else
-	fprintf('K=%d:%d(auto): warning: no robust K found...\n',factorInfo(1,1),factorInfo(end,1))
-	fprintf('K=%d:%d(auto): NMF completed, %3.0f minutes elapsed...\n',factorInfo(1,1),factorInfo(end,1),timeKLoop/60)
-    end
+if strcmp(rangeK,'auto')
+    fprintf('K=%d:%d(auto): NMF completed, %3.0f minutes elapsed...\n',factorInfo(1,1),factorInfo(end,1),timeKLoop/60)
 else
     fprintf('K=%d:%d(user defined): NMF completed, %3.0f minutes elapsed...\n',factorInfo(1,1),factorInfo(end,1),timeKLoop/60)
 end
+
+if size(factorInfo,1) <= 3
+    fprintf('K=%d:%d: warning: factors of low complexity, try greater repTimes...\n',factorInfo(1,1),factorInfo(end,1))
+end
+      
 clear factorInd factorStartInd factorEndInd 
-clear master_subset numfactors original repTimes selected subset autoStop
+clear master_subset numfactors original selected subset 
 
 %% ========== Determine compartments from factors in multiple runs ========
 tic
@@ -327,7 +317,7 @@ disp('Compartment selecting...')
 [factorLink,factorLinkScore] = Build_factor_link(factorInfo,factorMatch,factorScore);
 
 % estimate threshold
-[lowThre,highThre] = Est_score_threshold(factorLinkScore);
+[lowThre,highThre] = Est_score_threshold(factorLinkScore,repTimes);
 
 % pick compartment candidates
 sltComp = {};
@@ -342,7 +332,7 @@ for i = 2:size(factorLinkScore,1)
     if nextFlag == 1
         continue
     else
-        numfactors = factorInfoFlt(resIdx,1);
+        numfactors = factorInfo(resIdx,1);
         factorInd = factorLink{i,resIdx};
         res = sprintf('%d.%d',numfactors,factorInd);
         if ~any(strcmp(sltComp,res))
@@ -378,7 +368,7 @@ end
 
 % unify genes
 sltComp(:,end+1) = sltComp(:,end);
-indPri = find(strcmp(sltComp(:,3), 'Primary'))';
+indPri = find(strcmp(sltComp(:,3), 'Major'))';
 for i = indPri
     genes1 = sltComp{i,end};
     for j = indPri(i+1:end)
@@ -412,17 +402,17 @@ disp('Compartment annotating by MSigDB...')
 for i=1:size(sltComp,1)
     fprintf('Compartment annotation: compartment %s...\n',sltComp{i,1}); 
     switch dataType
-	case 'ATACseq'
+        case 'ATACseq'
 	    disp('Gene annotation for ATAC-seq data not supported yet...');
-	otherwise    
-	    [~,geneOrder] = sort(sltComp{i,6},'descend');
-	    GSEAout = GSEA(geneID(geneOrder),geneIDType);
-	    sltComp(i,10) = {GSEAout};
-	    compLabel = GSEAout.GS_name{1};
-	    compLabel((strfind(compLabel,'_')))='-';
-	    sltComp(i,11) = {compLabel};  
-	    fprintf('Compartment annotation: top MSigDB term determined as %s...\n',compLabel);
-	    clear geneOrder GSEAout topGS compLabel  
+        otherwise    
+            [~,geneOrder] = sort(sltComp{i,6},'descend');
+            GSEAout = GSEA(geneID(geneOrder),geneIDType);
+            sltComp(i,10) = {GSEAout};
+            compLabel = GSEAout.GS_name{1};
+            compLabel((strfind(compLabel,'_')))='-';
+            sltComp(i,11) = {compLabel};  
+            fprintf('Compartment annotation: top MSigDB term determined as %s...\n',compLabel);
+            clear geneOrder GSEAout topGS compLabel  
     end
 end
 timeGSEA = timeComp + toc;

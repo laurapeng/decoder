@@ -1,6 +1,7 @@
-function [sampleWeights] = Decon_single_sample(configFile)
+function [sampleWeights] = Decon_single_sample(configFileName)
 %function [sampleWeights] = Decon_single_sample(refSet,dataMatrix,dataFormat,geneIDType,logTransformed)
 
+outDir = pwd;
 
 % Add path
 binDECODER = fileparts(mfilename('fullpath'));
@@ -9,26 +10,54 @@ addpath(binDECODER)
 addpath(fullfile(binDECODER,'data'))
 addpath(fullfile(binDECODER,'utils'))
 
+% Read and parse configure file 
+configFile = fopen(configFileName);
+if configFile == -1
+    disp('Configure file not found...');
+else
+    configInfo = textscan(configFile,'%s\t%s');
+    %configInfo = [configInfo{:}];
+end
+fclose(configFile);
+
 % Load reference
+tmpInd = find(strcmp(configInfo{1},'refSet'));
+refSet = configInfo{2}{tmpInd};
 load(sprintf('%s.mat',refSet));
 indPri = find(strcmp(sltComp(:,3),'Primary'));
 sltComp = sltComp(indPri,:);
 geneSigRef = cell2mat(sltComp(:,5)');
 
 %%% if dataset too large
-tmpFile = dir(fullfile(binDECODER,'data',sprintf('%s.*.mat',refSet)));
+tmpFile = dir(fullfile(binDECODER,'data','*.mat'));
 tmpFile = {tmpFile(:).name}';
-if ~isempty(tmpFile)
-    load(fullfile(binDECODER,'data',sprintf('%s.1.mat',refSet)))
-    dataMerge = data;
-    for i=2:size(tmpFile,1)
-        load(fullfile(binDECODER,'data',sprintf('%s.%d.mat',refSet,i)))
-        dataMerge = [dataMerge data];
+for k = 1:size(tmpFile,1)
+    if contains(tmpFile{k,1},refSet)
+        tmpMatch = regexp(tmpFile{k,1},'(\d+)','match','once');
+        
+        if isempty(tmpMatch)
+            continue
+        elseif strcmp(tmpMatch,'1')
+            load(tmpFile{k,1})
+            %load(fullfile(binDECODER,'data',sprintf('%s.1.mat',refSet)))
+            dataMerge = data;
+        else
+            load(tmpFile{k,1})
+            %load(fullfile(binDECODER,'data',sprintf('%s.%d.mat',refSet,i)))
+            dataMerge = [dataMerge data];
+        end
     end
-    data = dataMerge;
 end
 
+if exist('dataMerge')
+    data = dataMerge;
+end
 dataRef = log2(1+data);
+
+% parse geneID
+tmpInd = find(strcmp(configInfo{1},'geneIDType'));
+geneIDType = configInfo{2}{tmpInd};
+
 switch geneIDType
     case 'TCGA'
         geneIDRef = geneID;
@@ -43,11 +72,22 @@ fprintf('Reference %s loaded...\n',refSet);
 clear data geneID geneSymbol EntrezID sampleID
 
 % Load data for deconvolution
+tmpInd = find(strcmp(configInfo{1},'dataFormat'));
+dataFormat = configInfo{2}{tmpInd};
+
+tmpInd = find(strcmp(configInfo{1},'dataMatrix'));
+dataMatrix = configInfo{2}{tmpInd};
+[outDir,outPrefix,~] = fileparts(dataMatrix);
+
 [data,geneID,sampleID] = Load_data(dataMatrix,dataFormat);
+
+% log transformation
+tmpInd = find(strcmp(configInfo{1},'logTransformed'));
+logTransformed = configInfo{2}{tmpInd};
+
 if strcmp(logTransformed,'no')
     data = log2(1+data);
 end
-[outDir,outPrefix,~] = fileparts(dataMatrix);
 
 % Overlap genes
 [~,ia,ib] = intersect(geneIDRef,geneID,'stable');

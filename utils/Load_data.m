@@ -8,10 +8,10 @@ end
 switch dataFormat
     case {'tsv','csv'}
         fprintf('Data matrix %s loading...\n',dataMatrix);
-        rawTable = readtable(dataMatrix,'ReadVariableNames',false);
-        geneID = table2cell(rawTable(2:end,1));
-        sampleID = table2cell(rawTable(1,2:end));
-        data = str2double(table2array(rawTable(2:end,2:end)));
+        rawTable = importdata(dataMatrix);
+        geneID = rawTable.textdata(2:end,1);
+        sampleID = rawTable.textdata(1,2:end);
+        data = rawTable.data;
         disp('Data matrix loaded...');
     case 'mat'
         fprintf('Data matrix %s loading...\n',dataMatrix);
@@ -22,7 +22,5 @@ switch dataFormat
         return
 end
 
-if ~exist(master_subset)
 master_subset = logical(ones(size(data,2),1));
-end
 

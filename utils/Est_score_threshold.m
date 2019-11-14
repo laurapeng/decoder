@@ -1,4 +1,4 @@
-function [lowThre,highThre] = Est_score_threshold(factorLinkScore)
+function [lowThre,highThre] = Est_score_threshold(factorLinkScore, repTimes)
 
 n = 0;
 scoreList = [];
@@ -14,7 +14,7 @@ for i = 2:size(factorLinkScore,1)
     end
 end
 lowThre = quantile(scoreList,0.25);
-if lowThre < 0.25
+if (lowThre < 0.25) && (repTimes > 5000)
     lowThre = 0.25;
 end
 highThre = median(scoreList);

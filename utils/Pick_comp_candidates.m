@@ -345,7 +345,7 @@ if resLen(III(1)) < 3
 end
 
 if strcmp(factorType,'Dropped')
-    factorType = 'Primary';
+    factorType = 'Major';
 end
 
 if length(resIdx) > 1

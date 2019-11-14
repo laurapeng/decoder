@@ -16,7 +16,7 @@ set(gca,'ytick',[])
 axis off
 % re-color
 hold on
-tmpComp = find(strcmp('Primary', sltComp(:,3)));
+tmpComp = find(strcmp('Major', sltComp(:,3)));
 if length(tmpComp) ~= 0
     [~,ia,ib] = intersect(sltComp(tmpComp,1),treeInd(:,1));
     cmpIdxX = x(:,ib);
@@ -28,7 +28,7 @@ if length(tmpComp) ~= 0
         'MarkerEdgeColor', 'red')
 end
 
-tmpComp = find(strcmp('Secondary', sltComp(:,3)));
+tmpComp = find(strcmp('Minor', sltComp(:,3)));
 if length(tmpComp) ~= 0
     [~,ia,ib] = intersect(sltComp(tmpComp,1),treeInd(:,1));
     cmpIdxX = x(:,ib);
@@ -58,7 +58,7 @@ yy = y';
 nodeName1 = string(treeInd(:,1));
 text(xx(:,1), yy(:,1), nodeName1, 'VerticalAlignment','bottom','HorizontalAlignment','center','FontSize',10);
 title({'DECODER factor tree'},'FontSize',15,'FontName','Times New Roman');
-legend({'Filtered factor','Linkage','Primary compartment','Unstable compartment','Secondary compartment'},...
+legend({'Filtered factor','Linkage','Major compartment','Unstable compartment','Minor compartment'},...
         'Location','northeastoutside','FontSize',10)
 legend('boxoff')
 print('-bestfit','Final_factor_tree','-dpdf')
