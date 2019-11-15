@@ -5,7 +5,9 @@
 % De novo deconvolution -------------------------------------------------------------------------------------------------------
 % -----------------------------------------------------------------------------------------------------------------------------
 
-%% Integrated mode for PC (single step; time-consuming) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Integrated mode for PC %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% (one-step; easy to run; time-consuming targeting subtle signals with large repetitions for training) %%%%%%%%%%%%%%%%%%%%%%
+%%% (good for hypothesis generation and exploration stage) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set path to where the output files are supposed to reside as working directory
 
@@ -29,7 +31,11 @@
 
 >> Decon_de_novo(configFile)
 
-%% Parallele mode for HPC (two steps; time-efficient) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Note: It took ~2 hours for a dataset with 150 samples using repTimes=500 and rangeK=2:10 (TCGA_RNAseq_PAAD). At this setting, one of the interested but easy to miss compartments is absent. When using repTimes=10000 and rangeK=auto, all the interested compartments showed up. As repTimes=10000 is too much for a PC, it is recommended to run on a cluster illustrated as below. 
+
+%% Parallele mode for HPC  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% (two-step; require knowledge of Linux and available cluster system; time-efficient) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% (good for further mining and finalizing stage) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Prepare a data matrix file with format .mat, .tsv or .csv in the working directory. Refer to demo_data.mat/tsv/csv.
 %%% Normalzed counts (TPM/FPKM) for RNAseq and normalized intensities for ATACseq are highly recommended.
