@@ -4,4 +4,4 @@ dataFormat	mat
 geneIDType	TCGA
 logTransformed	no
 rangeK	2:10
-repTimes	1000
+repTimes	500
