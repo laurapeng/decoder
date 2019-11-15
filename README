@@ -1,5 +1,5 @@
 % DECODER is an integrated framework which performs de novo deconvolution, and compartment weight estimation for a single sample.
-% This is a walkthrough of executing the Matlab functions on a local PC.
+% This is a walkthrough of executing the Matlab functions.
 
 % -----------------------------------------------------------------------------------------------------------------------------
 % De novo deconvolution -------------------------------------------------------------------------------------------------------
